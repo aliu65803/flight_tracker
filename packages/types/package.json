@@ -1,0 +1,9 @@
+{
+  "name": "@flight-tracker/types",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./domain": "./src/domain.ts",
+    "./preferences": "./src/preferences.ts"
+  }
+}

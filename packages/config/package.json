@@ -1,0 +1,8 @@
+{
+  "name": "@flight-tracker/config",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./worker": "./src/worker.ts"
+  }
+}
