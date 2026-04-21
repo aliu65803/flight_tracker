@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthCtaButton } from "@/components/auth-cta-button";
 import { HomeDashboard } from "@/components/home-dashboard";
 
 export default function HomePage() {
@@ -9,10 +10,12 @@ export default function HomePage() {
       <section
         className="panel"
         style={{
-          padding: 28,
+          padding: 32,
           display: "grid",
-          gap: 18,
-          marginBottom: 24,
+          gap: 22,
+          marginBottom: 28,
+          background:
+            "linear-gradient(135deg, rgba(255,248,238,0.96), rgba(241,248,250,0.88) 48%, rgba(255,242,218,0.86))",
         }}
       >
         <div
@@ -25,33 +28,22 @@ export default function HomePage() {
           }}
         >
           <div>
-            <p style={{ margin: 0, color: "var(--accent-2)", letterSpacing: 1.2 }}>
-              LIVE OPERATIONS VIEW
+            <p style={{ margin: 0, color: "var(--accent-deep)", letterSpacing: 1.8, fontWeight: 700 }}>
+              DEPARTURES AND ARRIVALS
             </p>
-            <h1 style={{ margin: "8px 0 0", fontSize: "clamp(2.2rem, 5vw, 4rem)" }}>
-              Flight Tracker
+            <h1 style={{ margin: "10px 0 0", fontSize: "clamp(2.5rem, 5vw, 4.4rem)", lineHeight: 0.95 }}>
+              Airport board,
+              <br />
+              reimagined
             </h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <Link
-              href="/sign-in"
-              style={{
-                borderRadius: 999,
-                padding: "12px 18px",
-                border: "1px solid var(--line)",
-                background: "linear-gradient(135deg, var(--accent), var(--accent-2))",
-                color: "#04111d",
-                fontWeight: 700,
-                cursor: "pointer",
-              }}
-            >
-              Sign in
-            </Link>
+            {clerkEnabled ? <AuthCtaButton /> : null}
           </div>
         </div>
         <p style={{ margin: 0, color: "var(--muted)", maxWidth: 720, lineHeight: 1.6 }}>
-          Poll live flight data in Railway, stream writes through Supabase Realtime, and let
-          users personalize what they see with Clerk-backed identity.
+          Build a personal departures board around the airports you care about and watch estimated
+          arrivals and departures refresh throughout the day.
         </p>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Link
@@ -60,10 +52,10 @@ export default function HomePage() {
               padding: "10px 16px",
               borderRadius: 999,
               border: "1px solid var(--line)",
-              background: "var(--bg-elevated)",
+              background: "rgba(255,255,255,0.62)",
             }}
           >
-            Open dashboard
+            Open board
           </Link>
           <Link
             href="https://supabase.com/docs/guides/realtime"
@@ -71,7 +63,7 @@ export default function HomePage() {
               padding: "10px 16px",
               borderRadius: 999,
               border: "1px solid var(--line)",
-              background: "transparent",
+              background: "rgba(255,255,255,0.32)",
             }}
           >
             Realtime docs

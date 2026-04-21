@@ -57,36 +57,18 @@ export function PreferencesPanel({ preferences, onSave }: Props) {
   return (
     <div className="panel" style={{ padding: 20, display: "grid", gap: 18 }}>
       <div>
-        <h2 style={{ margin: 0 }}>Personalized filters</h2>
+        <h2 style={{ margin: 0 }}>Airport board settings</h2>
         <p style={{ margin: "8px 0 0", color: "var(--muted)" }}>
-          Use comma-separated values to tune the feed for the signed-in user.
+          Pick one or more airports to build a live board for arriving and departing flights.
         </p>
       </div>
       <label style={{ display: "grid", gap: 8 }}>
-        Favorite airlines
-        <input
-          defaultValue={current.favorite_airlines.join(", ")}
-          onChange={(event) => updateDraft("favorite_airlines", event.target.value)}
-          style={inputStyle}
-          placeholder="AA, UA, DL"
-        />
-      </label>
-      <label style={{ display: "grid", gap: 8 }}>
-        Favorite airports
+        Airports to watch
         <input
           defaultValue={current.favorite_airports.join(", ")}
           onChange={(event) => updateDraft("favorite_airports", event.target.value)}
           style={inputStyle}
           placeholder="ORD, JFK, LAX"
-        />
-      </label>
-      <label style={{ display: "grid", gap: 8 }}>
-        Tracked flight numbers
-        <input
-          defaultValue={current.tracked_flight_numbers.join(", ")}
-          onChange={(event) => updateDraft("tracked_flight_numbers", event.target.value)}
-          style={inputStyle}
-          placeholder="AA100, UA2411"
         />
       </label>
       <label style={{ display: "flex", alignItems: "center", gap: 10 }}>
@@ -103,16 +85,16 @@ export function PreferencesPanel({ preferences, onSave }: Props) {
         disabled={saving}
         style={{
           width: "fit-content",
-          padding: "10px 16px",
+          padding: "12px 18px",
           borderRadius: 999,
           border: "1px solid var(--line)",
-          background: "linear-gradient(135deg, var(--accent), var(--accent-2))",
-          color: "#04111d",
+          background: "linear-gradient(135deg, var(--accent-deep), #4f89ad)",
+          color: "#fffaf2",
           fontWeight: 700,
           cursor: "pointer",
         }}
       >
-        {saving ? "Saving..." : "Save preferences"}
+        {saving ? "Saving..." : "Save airport board"}
       </button>
     </div>
   );
@@ -123,6 +105,6 @@ const inputStyle: CSSProperties = {
   borderRadius: 14,
   border: "1px solid var(--line)",
   padding: "12px 14px",
-  background: "rgba(3, 8, 18, 0.8)",
+  background: "rgba(255, 255, 255, 0.78)",
   color: "var(--text)",
 };

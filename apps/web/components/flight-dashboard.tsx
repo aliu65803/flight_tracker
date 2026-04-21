@@ -30,6 +30,7 @@ function AuthenticatedFlightDashboard() {
   const [flights, setFlights] = useState<FlightRecord[]>([]);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const watchedAirports = preferences?.favorite_airports ?? [];
 
   useEffect(() => {
     if (!authLoaded || !sessionLoaded || !userId || !session) {
@@ -69,7 +70,7 @@ function AuthenticatedFlightDashboard() {
         .from("flights")
         .select("*")
         .order("observed_at", { ascending: false })
-        .limit(50);
+        .limit(400);
 
       if (queryError) {
         setError(formatSupabaseError(queryError));
@@ -78,6 +79,12 @@ function AuthenticatedFlightDashboard() {
 
       setFlights((data ?? []) as FlightRecord[]);
     };
+
+    void loadFlights();
+
+    if (!preferences?.auto_refresh) {
+      return;
+    }
 
     const channel = supabase
       .channel("realtime:flights")
@@ -90,12 +97,10 @@ function AuthenticatedFlightDashboard() {
       )
       .subscribe();
 
-    void loadFlights();
-
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [session, sessionLoaded]);
+  }, [preferences?.auto_refresh, session, sessionLoaded]);
 
   const savePreferences = async (nextPreferences: UserPreferences) => {
     if (!session || !userId) {
@@ -105,9 +110,9 @@ function AuthenticatedFlightDashboard() {
     const supabase = createBrowserSupabaseClient(async () => session.getToken());
     const payload = {
       clerk_user_id: userId,
-      favorite_airlines: nextPreferences.favorite_airlines,
+      favorite_airlines: [],
       favorite_airports: nextPreferences.favorite_airports,
-      tracked_flight_numbers: nextPreferences.tracked_flight_numbers,
+      tracked_flight_numbers: [],
       auto_refresh: nextPreferences.auto_refresh,
     };
 
@@ -128,27 +133,16 @@ function AuthenticatedFlightDashboard() {
   };
 
   const filteredFlights = useMemo(() => {
-    if (!preferences) {
-      return flights;
+    if (watchedAirports.length === 0) {
+      return [];
     }
 
-    const airlineSet = new Set(preferences.favorite_airlines);
-    const airportSet = new Set(preferences.favorite_airports);
-    const flightSet = new Set(preferences.tracked_flight_numbers);
-
-    if (airlineSet.size === 0 && airportSet.size === 0 && flightSet.size === 0) {
-      return flights;
-    }
+    const airportSet = new Set(watchedAirports);
 
     return flights.filter((flight) => {
-      return (
-        airlineSet.has(flight.airline_iata ?? "") ||
-        airportSet.has(flight.departure_airport ?? "") ||
-        airportSet.has(flight.arrival_airport ?? "") ||
-        flightSet.has(flight.flight_number ?? "")
-      );
+      return airportSet.has(flight.departure_airport ?? "") || airportSet.has(flight.arrival_airport ?? "");
     });
-  }, [flights, preferences]);
+  }, [flights, watchedAirports]);
 
   if (!authLoaded || !sessionLoaded) {
     return (
@@ -166,7 +160,7 @@ function AuthenticatedFlightDashboard() {
           {error}
         </div>
       ) : null}
-      <FlightTable flights={filteredFlights} />
+      <FlightTable flights={filteredFlights} watchedAirports={watchedAirports} autoRefresh={preferences?.auto_refresh ?? true} />
     </>
   );
 }
