@@ -5,12 +5,14 @@ export type WorkerEnv = {
   NEXT_PUBLIC_SUPABASE_URL: string;
   SUPABASE_SERVICE_ROLE_KEY: string;
   FLIGHT_POLL_INTERVAL_MS: number;
-  FLIGHT_DATA_SOURCE: "opensky" | "aviationstack";
+  FLIGHT_DATA_SOURCE: "opensky" | "aviationstack" | "aerodatabox";
   OPENSKY_BASE_URL: string;
   OPENSKY_USERNAME?: string;
   OPENSKY_PASSWORD?: string;
   AVIATIONSTACK_BASE_URL: string;
   AVIATIONSTACK_ACCESS_KEY?: string;
+  AERODATABOX_BASE_URL: string;
+  AERODATABOX_API_KEY?: string;
 };
 
 loadLocalEnvFiles();
@@ -29,12 +31,19 @@ export function loadWorkerEnv(): WorkerEnv {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY!,
     FLIGHT_POLL_INTERVAL_MS: Number(process.env.FLIGHT_POLL_INTERVAL_MS ?? "15000"),
     FLIGHT_DATA_SOURCE:
-      process.env.FLIGHT_DATA_SOURCE === "aviationstack" ? "aviationstack" : "opensky",
+      process.env.FLIGHT_DATA_SOURCE === "aviationstack"
+        ? "aviationstack"
+        : process.env.FLIGHT_DATA_SOURCE === "aerodatabox"
+          ? "aerodatabox"
+          : "opensky",
     OPENSKY_BASE_URL: process.env.OPENSKY_BASE_URL ?? "https://opensky-network.org/api",
     OPENSKY_USERNAME: process.env.OPENSKY_USERNAME,
     OPENSKY_PASSWORD: process.env.OPENSKY_PASSWORD,
     AVIATIONSTACK_BASE_URL: process.env.AVIATIONSTACK_BASE_URL ?? "https://api.aviationstack.com/v1",
     AVIATIONSTACK_ACCESS_KEY: process.env.AVIATIONSTACK_ACCESS_KEY,
+    AERODATABOX_BASE_URL:
+      process.env.AERODATABOX_BASE_URL ?? "https://prod.api.market/api/v1/aedbx/aerodatabox",
+    AERODATABOX_API_KEY: process.env.AERODATABOX_API_KEY,
   };
 }
 

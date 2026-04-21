@@ -8,14 +8,12 @@ export default function HomePage() {
   return (
     <main className="shell">
       <section
-        className="panel"
+        className="panel heroPanel"
         style={{
-          padding: 32,
+          padding: 36,
           display: "grid",
-          gap: 22,
+          gap: 28,
           marginBottom: 28,
-          background:
-            "linear-gradient(135deg, rgba(255,248,238,0.96), rgba(241,248,250,0.88) 48%, rgba(255,242,218,0.86))",
         }}
       >
         <div
@@ -31,10 +29,8 @@ export default function HomePage() {
             <p style={{ margin: 0, color: "var(--accent-deep)", letterSpacing: 1.8, fontWeight: 700 }}>
               DEPARTURES AND ARRIVALS
             </p>
-            <h1 style={{ margin: "10px 0 0", fontSize: "clamp(2.5rem, 5vw, 4.4rem)", lineHeight: 0.95 }}>
-              Airport board,
-              <br />
-              reimagined
+            <h1 style={{ margin: "10px 0 0", fontSize: "clamp(2.8rem, 6vw, 5rem)", lineHeight: 0.92 }}>
+              Airport board
             </h1>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
@@ -45,6 +41,27 @@ export default function HomePage() {
           Build a personal departures board around the airports you care about and watch estimated
           arrivals and departures refresh throughout the day.
         </p>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 12 }}>
+          {[
+            ["Live board", "Real-time rows shaped into a departures-style display"],
+            ["Airport focus", "Watch only the terminals and runways that matter to you"],
+            ["Travel feel", "Warmer, lounge-inspired visuals instead of generic app chrome"],
+          ].map(([title, copy]) => (
+            <div
+              key={title}
+              style={{
+                padding: "16px 18px",
+                borderRadius: 18,
+                border: "1px solid rgba(47,108,143,0.12)",
+                background: "rgba(255,255,255,0.46)",
+                backdropFilter: "blur(10px)",
+              }}
+            >
+              <div style={{ fontWeight: 700, marginBottom: 6 }}>{title}</div>
+              <div style={{ color: "var(--muted)", lineHeight: 1.5, fontSize: 14 }}>{copy}</div>
+            </div>
+          ))}
+        </div>
         <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
           <Link
             href="#dashboard"
@@ -52,7 +69,7 @@ export default function HomePage() {
               padding: "10px 16px",
               borderRadius: 999,
               border: "1px solid var(--line)",
-              background: "rgba(255,255,255,0.62)",
+              background: "rgba(255,255,255,0.72)",
             }}
           >
             Open board

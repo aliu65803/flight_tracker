@@ -80,10 +80,18 @@ If you want live departure and arrival airports in this app:
 - set `FLIGHT_DATA_SOURCE=aviationstack`
 - add `AVIATIONSTACK_ACCESS_KEY`
 
+If you want the app to behave like a real airport board for the airports users select:
+
+- set `FLIGHT_DATA_SOURCE=aerodatabox`
+- add `AERODATABOX_API_KEY`
+
+The worker will read distinct `favorite_airports` from `public.user_preferences`, fetch AeroDataBox FIDS data for those airports, and upsert normalized rows with live board metadata like scheduled and estimated times, gate, terminal, and delay information.
+
 The worker now supports both providers:
 
 - `opensky`: live positions only, no live route airports
 - `aviationstack`: live positions plus departure and arrival airport fields
+- `aerodatabox`: airport-board/FIDS data for watched airports with richer arrival/departure details
 
 ## Deployment
 

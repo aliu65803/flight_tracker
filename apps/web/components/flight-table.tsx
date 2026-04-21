@@ -201,17 +201,17 @@ function BoardSection({ title, rows, watchedAirports, emptyMessage, withDivider 
                 <td style={{ padding: "16px 18px", color: "rgba(243,239,230,0.84)" }}>{formatRoute(row.flight)}</td>
                 <td style={{ padding: "16px 18px" }}>
                   <div className="boardMono" style={{ fontSize: 18, color: "#f1c77d", fontWeight: 700 }}>
-                    {formatEstimatedTime(row.flight)}
+                    {formatEstimatedTime(row.flight, row.direction)}
                   </div>
                   <div style={{ color: "rgba(243,239,230,0.5)", marginTop: 4 }}>
                     observed {new Date(row.flight.observed_at).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" })}
                   </div>
                 </td>
                 <td className="boardMono" style={{ padding: "16px 18px", color: "#f3efe6" }}>
-                  {formatGate(row.flight)}
+                  {formatGate(row.flight, row.direction)}
                 </td>
                 <td className="boardMono" style={{ padding: "16px 18px", color: "rgba(243,239,230,0.78)" }}>
-                  {formatTerminal(row.flight)}
+                  {formatTerminal(row.flight, row.direction)}
                 </td>
                 <td style={{ padding: "16px 18px" }}>
                   <span
@@ -284,7 +284,7 @@ function buildBoardRows(flights: FlightRecord[], watchedAirports: string[]): Boa
   const windowEnd = now + 3 * 60 * 60 * 1000;
 
   const boardRows = allRows.filter((row) => {
-    const estimatedAt = getEstimatedDate(row.flight).getTime();
+    const estimatedAt = getEstimatedDate(row.flight, row.direction).getTime();
     return estimatedAt >= now && estimatedAt <= windowEnd;
   });
 
@@ -325,12 +325,20 @@ function buildAllRows(flights: FlightRecord[], watchedAirports: string[]) {
 
       return rows;
     })
-    .sort((left, right) => getEstimatedDate(left.flight).getTime() - getEstimatedDate(right.flight).getTime());
+    .sort(
+      (left, right) =>
+        getEstimatedDate(left.flight, left.direction).getTime() -
+        getEstimatedDate(right.flight, right.direction).getTime(),
+    );
 }
 
 function formatBoardStatus(flight: FlightRecord, direction: BoardRow["direction"]) {
   if (flight.status === "on_ground") {
     return direction === "Departure" ? "boarding" : "landed";
+  }
+
+  if (typeof flight.status === "string" && flight.status.length > 0) {
+    return flight.status.replaceAll("_", " ");
   }
 
   if (isEstimatedRoute(flight)) {
@@ -340,27 +348,51 @@ function formatBoardStatus(flight: FlightRecord, direction: BoardRow["direction"
   return flight.status ?? "active";
 }
 
-function formatEstimatedTime(flight: FlightRecord) {
-  return getEstimatedDate(flight).toLocaleTimeString([], {
+function formatEstimatedTime(flight: FlightRecord, direction: BoardRow["direction"]) {
+  return getEstimatedDate(flight, direction).toLocaleTimeString([], {
     hour: "numeric",
     minute: "2-digit",
   });
 }
 
-function getEstimatedDate(flight: FlightRecord) {
+function getEstimatedDate(flight: FlightRecord, direction: BoardRow["direction"]) {
+  const providerEstimated = getDirectionTimestamp(flight, direction, [
+    "predicted_utc",
+    "revised_utc",
+    "scheduled_utc",
+    "actual_utc",
+    "runway_utc",
+  ]);
+
+  if (providerEstimated) {
+    return providerEstimated;
+  }
+
   const observed = new Date(flight.observed_at);
   const delayMinutes = getEstimatedOffsetMinutes(flight);
   return new Date(observed.getTime() + delayMinutes * 60_000);
 }
 
-function formatGate(flight: FlightRecord) {
+function formatGate(flight: FlightRecord, direction: BoardRow["direction"]) {
+  const gate = getDirectionString(flight, direction, "gate");
+
+  if (gate) {
+    return gate;
+  }
+
   const seed = hashSeed(`${flight.external_id}:gate`);
   const letter = ["A", "B", "C", "D", "E"][seed % 5];
   const number = (seed % 28) + 1;
   return `${letter}${number}`;
 }
 
-function formatTerminal(flight: FlightRecord) {
+function formatTerminal(flight: FlightRecord, direction: BoardRow["direction"]) {
+  const terminal = getDirectionString(flight, direction, "terminal");
+
+  if (terminal) {
+    return terminal;
+  }
+
   const seed = hashSeed(`${flight.external_id}:terminal`);
   return `T${(seed % 6) + 1}`;
 }
@@ -382,4 +414,33 @@ function hashSeed(value: string) {
   }
 
   return hash;
+}
+
+function getDirectionString(
+  flight: FlightRecord,
+  direction: BoardRow["direction"],
+  field: "gate" | "terminal",
+) {
+  const value = flight.metadata[`${direction.toLowerCase()}_${field}`];
+  return typeof value === "string" && value.length > 0 ? value : null;
+}
+
+function getDirectionTimestamp(
+  flight: FlightRecord,
+  direction: BoardRow["direction"],
+  suffixes: Array<"predicted_utc" | "revised_utc" | "scheduled_utc" | "actual_utc" | "runway_utc">,
+) {
+  for (const suffix of suffixes) {
+    const value = flight.metadata[`${direction.toLowerCase()}_${suffix}`];
+
+    if (typeof value === "string" && value.length > 0) {
+      const date = new Date(value);
+
+      if (!Number.isNaN(date.getTime())) {
+        return date;
+      }
+    }
+  }
+
+  return null;
 }

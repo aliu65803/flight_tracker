@@ -29,8 +29,11 @@ function AuthenticatedFlightDashboard() {
   const { isLoaded: sessionLoaded, session } = useSession();
   const [flights, setFlights] = useState<FlightRecord[]>([]);
   const [preferences, setPreferences] = useState<UserPreferences | null>(null);
+  const [previewPreferences, setPreviewPreferences] = useState<UserPreferences | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const watchedAirports = preferences?.favorite_airports ?? [];
+  const activePreferences = previewPreferences ?? preferences;
+  const watchedAirports = activePreferences?.favorite_airports ?? [];
+  const watchedAirportKey = watchedAirports.join("|");
 
   useEffect(() => {
     if (!authLoaded || !sessionLoaded || !userId || !session) {
@@ -47,12 +50,16 @@ function AuthenticatedFlightDashboard() {
         .maybeSingle();
 
       if (queryError) {
-        setPreferences(defaultUserPreferences(userId));
+        const fallbackPreferences = defaultUserPreferences(userId);
+        setPreferences(fallbackPreferences);
+        setPreviewPreferences(fallbackPreferences);
         setError(formatSupabaseError(queryError));
         return;
       }
 
-      setPreferences((data as UserPreferences | null) ?? defaultUserPreferences(userId));
+      const nextPreferences = (data as UserPreferences | null) ?? defaultUserPreferences(userId);
+      setPreferences(nextPreferences);
+      setPreviewPreferences(nextPreferences);
     };
 
     void loadPreferences();
@@ -64,13 +71,21 @@ function AuthenticatedFlightDashboard() {
     }
 
     const supabase = createBrowserSupabaseClient(async () => session.getToken());
+    const watchedAirportList = [...new Set(watchedAirports.map((airport) => airport.trim().toUpperCase()))];
 
     const loadFlights = async () => {
+      if (watchedAirportList.length === 0) {
+        setFlights([]);
+        return;
+      }
+
+      const watchedAirportFilter = watchedAirportList.join(",");
       const { data, error: queryError } = await supabase
         .from("flights")
         .select("*")
+        .or(`departure_airport.in.(${watchedAirportFilter}),arrival_airport.in.(${watchedAirportFilter})`)
         .order("observed_at", { ascending: false })
-        .limit(400);
+        .limit(2500);
 
       if (queryError) {
         setError(formatSupabaseError(queryError));
@@ -82,7 +97,7 @@ function AuthenticatedFlightDashboard() {
 
     void loadFlights();
 
-    if (!preferences?.auto_refresh) {
+    if (!activePreferences?.auto_refresh) {
       return;
     }
 
@@ -100,7 +115,7 @@ function AuthenticatedFlightDashboard() {
     return () => {
       void supabase.removeChannel(channel);
     };
-  }, [preferences?.auto_refresh, session, sessionLoaded]);
+  }, [activePreferences?.auto_refresh, session, sessionLoaded, watchedAirportKey]);
 
   const savePreferences = async (nextPreferences: UserPreferences) => {
     if (!session || !userId) {
@@ -124,25 +139,17 @@ function AuthenticatedFlightDashboard() {
 
     if (upsertError) {
       setPreferences(nextPreferences);
+      setPreviewPreferences(nextPreferences);
       setError(formatSupabaseError(upsertError));
       return;
     }
 
     setError(null);
     setPreferences(data as UserPreferences);
+    setPreviewPreferences(data as UserPreferences);
   };
 
-  const filteredFlights = useMemo(() => {
-    if (watchedAirports.length === 0) {
-      return [];
-    }
-
-    const airportSet = new Set(watchedAirports);
-
-    return flights.filter((flight) => {
-      return airportSet.has(flight.departure_airport ?? "") || airportSet.has(flight.arrival_airport ?? "");
-    });
-  }, [flights, watchedAirports]);
+  const filteredFlights = useMemo(() => flights, [flights]);
 
   if (!authLoaded || !sessionLoaded) {
     return (
@@ -154,13 +161,21 @@ function AuthenticatedFlightDashboard() {
 
   return (
     <>
-      <PreferencesPanel preferences={preferences} onSave={savePreferences} />
+      <PreferencesPanel
+        preferences={preferences}
+        onChange={setPreviewPreferences}
+        onSave={savePreferences}
+      />
       {error ? (
         <div className="panel" style={{ padding: 20, borderColor: "rgba(255,128,128,0.3)" }}>
           {error}
         </div>
       ) : null}
-      <FlightTable flights={filteredFlights} watchedAirports={watchedAirports} autoRefresh={preferences?.auto_refresh ?? true} />
+      <FlightTable
+        flights={filteredFlights}
+        watchedAirports={watchedAirports}
+        autoRefresh={activePreferences?.auto_refresh ?? true}
+      />
     </>
   );
 }

@@ -1,9 +1,8 @@
-"use client";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { ClerkSignInPanel } from "@/components/clerk-sign-in-panel";
 
-import Link from "next/link";
-import { SignIn } from "@clerk/nextjs";
-
-export default function SignInPage() {
+export default async function SignInPage() {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
     return (
       <main className="shell" style={{ display: "grid", placeItems: "center", minHeight: "100vh" }}>
@@ -12,18 +11,11 @@ export default function SignInPage() {
     );
   }
 
-  return (
-    <main
-      className="shell"
-      style={{ display: "grid", placeItems: "center", minHeight: "100vh", gap: 20, paddingBlock: 32 }}
-    >
-      <SignIn signUpUrl="/sign-up" fallbackRedirectUrl="/" />
-      <p style={{ margin: 0, color: "var(--muted)" }}>
-        Need an account?{" "}
-        <Link href="/sign-up" style={{ color: "var(--accent-2)" }}>
-          Sign up
-        </Link>
-      </p>
-    </main>
-  );
+  const { userId } = await auth();
+
+  if (userId) {
+    redirect("/");
+  }
+
+  return <ClerkSignInPanel />;
 }

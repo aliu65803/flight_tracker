@@ -89,3 +89,43 @@ input {
   border-radius: 22px;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
+
+.heroPanel {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(135deg, rgba(255, 248, 238, 0.96), rgba(241, 248, 250, 0.88) 48%, rgba(255, 242, 218, 0.86)),
+    radial-gradient(circle at 85% 18%, rgba(47, 108, 143, 0.08), transparent 20%);
+}
+
+.heroPanel::before {
+  content: "";
+  position: absolute;
+  inset: auto -40px 18px auto;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  border: 1px dashed rgba(47, 108, 143, 0.16);
+  opacity: 0.9;
+}
+
+.heroPanel::after {
+  content: "";
+  position: absolute;
+  inset: 26px auto auto 54%;
+  width: 240px;
+  height: 120px;
+  background:
+    linear-gradient(90deg, rgba(47, 108, 143, 0.1), rgba(47, 108, 143, 0)),
+    repeating-linear-gradient(90deg, rgba(47, 108, 143, 0.08), rgba(47, 108, 143, 0.08) 14px, transparent 14px, transparent 22px);
+  transform: rotate(-8deg);
+  border-radius: 999px;
+  filter: blur(0.2px);
+  opacity: 0.55;
+}
+
+.settingsPanel {
+  background:
+    linear-gradient(180deg, rgba(255, 252, 247, 0.94), rgba(249, 243, 235, 0.92)),
+    radial-gradient(circle at top right, rgba(241, 199, 125, 0.18), transparent 22%);
+}

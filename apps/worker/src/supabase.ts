@@ -9,3 +9,24 @@ export function createSupabaseAdminClient(env: WorkerEnv) {
     },
   });
 }
+
+export async function loadWatchedAirports(
+  supabase: ReturnType<typeof createSupabaseAdminClient>,
+) {
+  const { data, error } = await supabase.from("user_preferences").select("favorite_airports");
+
+  if (error) {
+    throw new Error(`Supabase preferences query failed: ${error.message}`);
+  }
+
+  return Array.from(
+    new Set(
+      (data ?? [])
+        .flatMap((row) =>
+          Array.isArray(row.favorite_airports) ? row.favorite_airports : [],
+        )
+        .filter((airport): airport is string => typeof airport === "string" && airport.length > 0)
+        .map((airport) => airport.trim().toUpperCase()),
+    ),
+  );
+}

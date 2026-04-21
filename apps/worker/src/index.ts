@@ -1,17 +1,23 @@
 import { setTimeout as sleep } from "node:timers/promises";
 import { loadWorkerEnv } from "@flight-tracker/config/worker";
 import type { FlightUpsert } from "@flight-tracker/types/domain";
-import { createSupabaseAdminClient } from "./supabase.js";
+import { createSupabaseAdminClient, loadWatchedAirports } from "./supabase.js";
 import { fetchFlights } from "./providers/index.js";
 
 const env = loadWorkerEnv();
 const supabase = createSupabaseAdminClient(env);
 
 async function pollOnce() {
-  const flights = await fetchFlights(env);
+  const watchedAirports =
+    env.FLIGHT_DATA_SOURCE === "aerodatabox" ? await loadWatchedAirports(supabase) : [];
+  const flights = await fetchFlights(env, watchedAirports);
 
   if (flights.length === 0) {
-    console.log("No flights returned from provider.");
+    console.log(
+      env.FLIGHT_DATA_SOURCE === "aerodatabox" && watchedAirports.length === 0
+        ? "No watched airports found in user preferences yet."
+        : "No flights returned from provider.",
+    );
     return;
   }
 
